@@ -1,0 +1,45 @@
+// Custom Toast Styles
+.Toastify__toast {
+  &.Toastify__toast--success {
+    background-color: #28a745 !important;
+    color: #ffffff !important;
+    font-weight: 500;
+    font-size: 14px;
+    
+    .Toastify__toast-body {
+      color: #ffffff !important;
+    }
+    
+    .Toastify__close-button {
+      color: #ffffff !important;
+      opacity: 0.8;
+      
+      &:hover {
+        opacity: 1;
+      }
+    }
+  }
+  
+  &.Toastify__toast--error {
+    .Toastify__toast-body {
+      color: #ffffff !important;
+    }
+  }
+  
+  &.Toastify__toast--warning {
+    .Toastify__toast-body {
+      color: #ffffff !important;
+    }
+  }
+  
+  &.Toastify__toast--info {
+    .Toastify__toast-body {
+      color: #ffffff !important;
+    }
+  }
+}
+
+// Hide the default toast icons
+.Toastify__toast-icon {
+  display: none !important;
+}

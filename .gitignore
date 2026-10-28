@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+
+# Environment / secrets — NEVER commit
+.env
+.env.local
+*.local
+!*.env.example
+
+# Build output
+dist/
+dist-ssr/
+
+# Database backups
+backend/backups/
+
+# Tests
+coverage/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
