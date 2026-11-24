@@ -2,12 +2,14 @@ import { Card, Col, Row, Button, Modal, Form, Table, Badge } from 'react-bootstr
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import ActionsDropdown from '@/components/ActionsDropdown';
+import { getUsers } from '@/services/api';
 
 const SuppliersPage = () => {
   const [showModal, setShowModal] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [selectedSupplier, setSelectedSupplier] = useState(null);
   const [suppliers, setSuppliers] = useState([]);
+  const [users, setUsers] = useState([]);
   const [formData, setFormData] = useState({
     name: '',
     contactType: 'supplier',
@@ -24,7 +26,16 @@ const SuppliersPage = () => {
 
   useEffect(() => {
     loadSuppliers();
+    getUsers()
+      .then((res) => {
+        const list = Array.isArray(res.data) ? res.data : res.data?.data || [];
+        setUsers(list);
+      })
+      .catch(() => setUsers([]));
   }, []);
+
+  const userDisplayName = (u) =>
+    `${u.first_name || ''} ${u.last_name || ''}`.trim() || u.username || u.email || `User ${u.id}`;
 
   const loadSuppliers = () => {
     const storedSuppliers = JSON.parse(localStorage.getItem('bms_suppliers') || '[]');
@@ -314,16 +325,6 @@ const SuppliersPage = () => {
                   </Form.Text>
                 </Form.Group>
               </Col>
-              <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Customer Group:</Form.Label>
-                  <Form.Select name="customerGroup" value={formData.customerGroup} onChange={handleInputChange}>
-                    <option value="">None</option>
-                    <option value="group1">Group 1</option>
-                    <option value="group2">Group 2</option>
-                  </Form.Select>
-                </Form.Group>
-              </Col>
             </Row>
 
             <Row>
@@ -387,17 +388,16 @@ const SuppliersPage = () => {
                   <Form.Label>Assigned to:</Form.Label>
                   <Form.Select name="assignedTo" value={formData.assignedTo} onChange={handleInputChange}>
                     <option value="">Select User</option>
-                    <option value="user1">User 1</option>
-                    <option value="user2">User 2</option>
+                    {users.map((u) => (
+                      <option key={u.id} value={u.id}>
+                        {userDisplayName(u)}
+                      </option>
+                    ))}
                   </Form.Select>
                 </Form.Group>
               </Col>
             </Row>
 
-            <div className="text-primary" style={{ cursor: 'pointer' }}>
-              <i className="mdi mdi-plus-circle me-1"></i>
-              More Informations
-            </div>
           </Modal.Body>
           <Modal.Footer>
             <Button variant="secondary" onClick={handleClose}>

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import ActionsDropdown from '@/components/ActionsDropdown';
+import * as XLSX from 'xlsx';
 
 const ListStockAdjustmentPage = () => {
   const navigate = useNavigate();
@@ -40,6 +41,24 @@ const ListStockAdjustmentPage = () => {
 
   const totals = calculateTotals();
 
+  const handleDownloadExcel = () => {
+    const headers = ['Date', 'Reference No.', 'Location', 'Adjustment Type', 'Total Items', 'Total Cost Impact', 'Status', 'Added By'];
+    const rows = adjustments.map((a) => [
+      a.date ? new Date(a.date).toLocaleDateString() : '',
+      a.referenceNo || '',
+      a.businessLocation || '',
+      a.adjustmentType || '',
+      a.totalItems ?? '',
+      a.totalCost ?? 0,
+      a.status || '',
+      a.createdBy || ''
+    ]);
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Stock Adjustments');
+    XLSX.writeFile(wb, 'stock-adjustments.xlsx');
+  };
+
   return (
     <>
       <Row>
@@ -73,6 +92,10 @@ const ListStockAdjustmentPage = () => {
                   <option>100</option>
                 </select>
                 <span className="ms-2 me-3">entries</span>
+
+                <Button variant="success" size="sm" onClick={handleDownloadExcel}>
+                  <i className="mdi mdi-download me-1"></i> Download Excel
+                </Button>
               </div>
 
               <div className="table-responsive">

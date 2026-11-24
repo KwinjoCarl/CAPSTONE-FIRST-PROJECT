@@ -1,6 +1,7 @@
 import { Card, Col, Row, Button, Form, Table } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import { getLocations } from '@/helpers/settings';
 
 const AddQuotationPage = () => {
   const navigate = useNavigate();
@@ -65,8 +66,10 @@ const AddQuotationPage = () => {
                       <Form.Label>
                         <i className="mdi mdi-home me-1"></i>
                         <Form.Select name="location" value={formData.location} onChange={handleInputChange} className="d-inline-block" style={{ width: 'auto' }}>
-                          <option value="">POSPlus (BLOG1)</option>
-                          <option value="location1">Location 1</option>
+                          <option value="">Select Location</option>
+                          {getLocations().map((loc) => (
+                            <option key={loc.id} value={loc.name}>{loc.name}</option>
+                          ))}
                         </Form.Select>
                         <i className="mdi mdi-information-outline ms-2"></i>
                       </Form.Label>

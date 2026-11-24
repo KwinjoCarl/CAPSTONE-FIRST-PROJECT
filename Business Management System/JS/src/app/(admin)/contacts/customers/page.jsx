@@ -2,6 +2,7 @@ import { Card, Col, Row, Button, Modal, Form, Table, Badge, Tabs, Tab } from 're
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import ActionsDropdown from '@/components/ActionsDropdown';
+import { getSettings } from '@/helpers/settings';
 
 const CustomersPage = () => {
   const [showModal, setShowModal] = useState(false);
@@ -389,6 +390,7 @@ const CustomersPage = () => {
 
   const printStatement = () => {
     const printWindow = window.open('', '_blank');
+    const settings = getSettings();
     
     const statementHTML = `
       <!DOCTYPE html>
@@ -408,7 +410,9 @@ const CustomersPage = () => {
       </head>
       <body>
         <div class="header">
-          <h1>BMS - Business Management System</h1>
+          <h1>${settings.businessName}</h1>
+          ${settings.ownerName ? `<p>Owner: ${settings.ownerName}</p>` : ''}
+          <p>${[settings.address, settings.phone && `Phone: ${settings.phone}`, settings.email && `Email: ${settings.email}`, settings.taxNumber && `Tax No: ${settings.taxNumber}`].filter(Boolean).join(' | ')}</p>
           <h2>Customer Account Statement</h2>
         </div>
         <div class="customer-info">

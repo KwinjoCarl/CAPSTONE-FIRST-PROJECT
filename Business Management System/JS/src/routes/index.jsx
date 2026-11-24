@@ -23,9 +23,11 @@ const ImportContactsPage = lazy(() => import('@/app/(admin)/contacts/import/page
 const ListProductsPage = lazy(() => import('@/app/(admin)/products/list/page'));
 const AddProductPage = lazy(() => import('@/app/(admin)/products/add/page'));
 const EditProductPage = lazy(() => import('@/app/(admin)/products/edit/[id]/page'));
-const PrintLabelsPage = lazy(() => import('@/app/(admin)/products/print-labels/page'));
 const VariationsPage = lazy(() => import('@/app/(admin)/products/variations/page'));
 const ImportProductsPage = lazy(() => import('@/app/(admin)/products/import/page'));
+const ImportSeedPage = lazy(() => import('@/app/(admin)/products/import-seed/page'));
+const StockSeedPage = lazy(() => import('@/app/(admin)/products/stock-seed/page'));
+const SkuSeedPage = lazy(() => import('@/app/(admin)/products/sku-seed/page'));
 const ImportOpeningStockPage = lazy(() => import('@/app/(admin)/products/import-opening-stock/page'));
 const SellingPriceGroupPage = lazy(() => import('@/app/(admin)/products/selling-price-group/page'));
 const UnitsPage = lazy(() => import('@/app/(admin)/products/units/page'));
@@ -37,8 +39,6 @@ const WarrantiesPage = lazy(() => import('@/app/(admin)/products/warranties/page
 const ListPurchasesPage = lazy(() => import('@/app/(admin)/purchases/list/page'));
 const AddPurchasePage = lazy(() => import('@/app/(admin)/purchases/add/page'));
 const EditPurchasePage = lazy(() => import('@/app/(admin)/purchases/edit/[id]/page'));
-const PurchaseReturnPage = lazy(() => import('@/app/(admin)/purchases/purchase-return/page'));
-const AddPurchaseReturnPage = lazy(() => import('@/app/(admin)/purchases/purchase-return/add/page'));
 const ImportPurchasesPage = lazy(() => import('@/app/(admin)/purchases/import/page'));
 
 // Sales
@@ -90,7 +90,6 @@ const ActivityLogPage = lazy(() => import('@/app/(admin)/reports/activity-log/pa
 const BusinessSettingsPage = lazy(() => import('@/app/(admin)/settings/business/page'));
 const BusinessLocationsPage = lazy(() => import('@/app/(admin)/settings/locations/page'));
 const InvoiceSettingsPage = lazy(() => import('@/app/(admin)/settings/invoice/page'));
-const BarcodeSettingsPage = lazy(() => import('@/app/(admin)/settings/barcode/page'));
 const ReceiptPrintersPage = lazy(() => import('@/app/(admin)/settings/receipt-printers/page'));
 const TaxRatesPage = lazy(() => import('@/app/(admin)/settings/tax-rates/page'));
 const PaymentAccountsPage = lazy(() => import('@/app/(admin)/settings/payment-accounts/page'));
@@ -115,7 +114,7 @@ export const authRoutes = [{
   path: '/auth/sign-in',
   element: <AuthSignIn />
 }, {
-  name: 'Sign Up',
+  name: 'Account Request',
   path: '/auth/sign-up',
   element: <AuthSignUp />
 }, {
@@ -203,10 +202,6 @@ const productsRoutes = [{
   name: 'Edit Product',
   element: <EditProductPage />
 }, {
-  path: '/products/print-labels',
-  name: 'Print Labels',
-  element: <PrintLabelsPage />
-}, {
   path: '/products/variations',
   name: 'Variations',
   element: <VariationsPage />
@@ -214,6 +209,18 @@ const productsRoutes = [{
   path: '/products/import',
   name: 'Import Products',
   element: <ImportProductsPage />
+}, {
+  path: '/products/import-seed',
+  name: 'Import Seed',
+  element: <ImportSeedPage />
+}, {
+  path: '/products/stock-seed',
+  name: 'Stock Seed',
+  element: <StockSeedPage />
+}, {
+  path: '/products/sku-seed',
+  name: 'SKU Seed',
+  element: <SkuSeedPage />
 }, {
   path: '/products/import-opening-stock',
   name: 'Import Opening Stock',
@@ -252,14 +259,6 @@ const purchasesRoutes = [{
   path: '/purchases/edit/:id',
   name: 'Edit Purchase',
   element: <EditPurchasePage />
-}, {
-  path: '/purchases/purchase-return',
-  name: 'Purchase Return',
-  element: <PurchaseReturnPage />
-}, {
-  path: '/purchases/purchase-return/add',
-  name: 'Add Purchase Return',
-  element: <AddPurchaseReturnPage />
 }, {
   path: '/purchases/import',
   name: 'Import Purchases',
@@ -434,10 +433,6 @@ const settingsRoutes = [{
   path: '/settings/invoice',
   name: 'Invoice Settings',
   element: <InvoiceSettingsPage />
-}, {
-  path: '/settings/barcode',
-  name: 'Barcode Settings',
-  element: <BarcodeSettingsPage />
 }, {
   path: '/settings/receipt-printers',
   name: 'Receipt Printers',

@@ -1,7 +1,8 @@
-import { Card, Col, Row, Table, Badge, Alert } from 'react-bootstrap';
+import { Card, Col, Row, Table, Badge, Alert, Form, Button } from 'react-bootstrap';
 import { useEffect, useState } from 'react';
 import ReactApexChart from 'react-apexcharts';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -27,11 +28,90 @@ const HomePage = () => {
     categories: []
   });
 
-  useEffect(() => {
-    loadDashboardData();
-  }, []);
+  // Date range filter — affects ONLY the KPI metric cards
+  const [datePreset, setDatePreset] = useState('all');
+  const [customStart, setCustomStart] = useState('');
+  const [customEnd, setCustomEnd] = useState('');
+  const [dateRange, setDateRange] = useState(null); // { start: 'YYYY-MM-DD', end: 'YYYY-MM-DD' } or null = all time
 
-  const loadDashboardData = () => {
+  const toDateStr = (d) => d.toISOString().split('T')[0];
+
+  const presetRanges = {
+    today: () => {
+      const t = toDateStr(new Date());
+      return { start: t, end: t };
+    },
+    '7days': () => {
+      const end = new Date();
+      const start = new Date();
+      start.setDate(start.getDate() - 6);
+      return { start: toDateStr(start), end: toDateStr(end) };
+    },
+    '30days': () => {
+      const end = new Date();
+      const start = new Date();
+      start.setDate(start.getDate() - 29);
+      return { start: toDateStr(start), end: toDateStr(end) };
+    },
+    lastMonth: () => {
+      const now = new Date();
+      const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const end = new Date(now.getFullYear(), now.getMonth(), 0);
+      return { start: toDateStr(start), end: toDateStr(end) };
+    },
+    thisYear: () => {
+      const now = new Date();
+      return { start: `${now.getFullYear()}-01-01`, end: toDateStr(now) };
+    },
+    lastYearMonth: () => {
+      const now = new Date();
+      const start = new Date(now.getFullYear() - 1, now.getMonth(), 1);
+      const end = new Date(now.getFullYear() - 1, now.getMonth() + 1, 0);
+      return { start: toDateStr(start), end: toDateStr(end) };
+    }
+  };
+
+  const handlePresetChange = (e) => {
+    const preset = e.target.value;
+    setDatePreset(preset);
+    if (preset === 'all') {
+      setDateRange(null);
+    } else if (preset === 'custom') {
+      // keep current range until Apply is clicked with valid dates
+      if (customStart && customEnd) applyCustomRange();
+    } else {
+      setDateRange(presetRanges[preset]());
+    }
+  };
+
+  const applyCustomRange = () => {
+    if (!customStart || !customEnd) {
+      toast.error('Please select both start and end dates');
+      return;
+    }
+    if (customEnd < customStart) {
+      toast.error('End date cannot be before start date');
+      return;
+    }
+    setDateRange({ start: customStart, end: customEnd });
+  };
+
+  const inRange = (dateStr, range) => {
+    if (!range || !dateStr) return !range; // no range = include all; missing date = exclude when filtering
+    const d = new Date(dateStr);
+    if (isNaN(d)) return false;
+    return dateStr >= range.start && dateStr <= range.end;
+  };
+
+  const activeRangeLabel = dateRange
+    ? `${new Date(dateRange.start).toLocaleDateString()} – ${new Date(dateRange.end).toLocaleDateString()}`
+    : 'All time';
+
+  useEffect(() => {
+    loadDashboardData(dateRange);
+  }, [dateRange]);
+
+  const loadDashboardData = (range) => {
     // Load all data from localStorage
     const products = JSON.parse(localStorage.getItem('bms_products') || '[]');
     const sales = JSON.parse(localStorage.getItem('bms_sales') || '[]');
@@ -40,25 +120,24 @@ const HomePage = () => {
     const customers = JSON.parse(localStorage.getItem('bms_customers') || '[]');
     const suppliers = JSON.parse(localStorage.getItem('bms_suppliers') || '[]');
 
-    // Calculate KPIs
-    const today = new Date().toISOString().split('T')[0];
-    
-    // Today's sales
-    const todaySalesTotal = sales
-      .filter(sale => sale.saleDate === today)
-      .reduce((sum, sale) => sum + (sale.grandTotal || 0), 0);
+    // Calculate KPIs — filtered by selected date range (metric cards only)
+    const rangeSales = sales.filter(s => inRange(s.saleDate || s.createdAt, range));
+    const rangePurchases = purchases.filter(p => inRange(p.purchaseDate || p.createdAt, range));
+    const rangeExpenses = expenses.filter(e => inRange(e.date || e.createdAt, range));
 
-    // Total sales
+    const rangeSalesTotal = rangeSales.reduce((sum, sale) => sum + (sale.grandTotal || 0), 0);
+
+    // Total sales (all-time — used as subtitle only)
     const totalSalesAmount = sales.reduce((sum, sale) => sum + (sale.grandTotal || 0), 0);
 
     // Total purchases
-    const totalPurchasesAmount = purchases.reduce((sum, purchase) => sum + (purchase.grandTotal || 0), 0);
+    const totalPurchasesAmount = rangePurchases.reduce((sum, purchase) => sum + (purchase.grandTotal || 0), 0);
 
     // Total expenses
-    const totalExpensesAmount = expenses.reduce((sum, expense) => sum + (parseFloat(expense.totalAmount) || 0), 0);
+    const totalExpensesAmount = rangeExpenses.reduce((sum, expense) => sum + (parseFloat(expense.totalAmount) || 0), 0);
 
     // Net profit (simplified: sales - purchases - expenses)
-    const netProfitAmount = totalSalesAmount - totalPurchasesAmount - totalExpensesAmount;
+    const netProfitAmount = rangeSalesTotal - totalPurchasesAmount - totalExpensesAmount;
 
     // Stock valuation
     const stockValue = products.reduce((sum, product) => {
@@ -131,7 +210,7 @@ const HomePage = () => {
 
     // Update state
     setKpis({
-      todaySales: todaySalesTotal,
+      todaySales: rangeSalesTotal,
       totalSales: totalSalesAmount,
       totalPurchases: totalPurchasesAmount,
       totalExpenses: totalExpensesAmount,
@@ -207,6 +286,62 @@ const HomePage = () => {
           <div className="page-title-box">
             <h4 className="page-title">Dashboard - Business Overview</h4>
           </div>
+        </Col>
+      </Row>
+
+      {/* Date Range Filter — affects KPI cards only */}
+      <Row className="mb-3">
+        <Col xs={12}>
+          <Card>
+            <Card.Body className="py-2">
+              <div className="d-flex align-items-center flex-wrap gap-2">
+                <span className="fw-bold text-nowrap">
+                  <i className="mdi mdi-calendar-range me-1"></i>Date Range:
+                </span>
+                <Form.Select
+                  size="sm"
+                  style={{ width: 'auto' }}
+                  value={datePreset}
+                  onChange={handlePresetChange}
+                >
+                  <option value="all">All Time</option>
+                  <option value="today">Today</option>
+                  <option value="7days">Last 7 Days</option>
+                  <option value="30days">Last 30 Days</option>
+                  <option value="lastMonth">Last Month</option>
+                  <option value="thisYear">This Year</option>
+                  <option value="lastYearMonth">This Month Last Year</option>
+                  <option value="custom">Custom Range</option>
+                </Form.Select>
+                {datePreset === 'custom' && (
+                  <>
+                    <Form.Control
+                      type="date"
+                      size="sm"
+                      style={{ width: 'auto' }}
+                      value={customStart}
+                      onChange={(e) => setCustomStart(e.target.value)}
+                    />
+                    <span className="text-muted">to</span>
+                    <Form.Control
+                      type="date"
+                      size="sm"
+                      style={{ width: 'auto' }}
+                      value={customEnd}
+                      onChange={(e) => setCustomEnd(e.target.value)}
+                    />
+                    <Button size="sm" variant="primary" onClick={applyCustomRange}>
+                      Apply
+                    </Button>
+                  </>
+                )}
+                <span className="text-muted ms-auto text-nowrap">
+                  <i className="mdi mdi-calendar-check me-1"></i>
+                  Active: {activeRangeLabel}
+                </span>
+              </div>
+            </Card.Body>
+          </Card>
         </Col>
       </Row>
 

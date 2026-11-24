@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import ActionsDropdown from '@/components/ActionsDropdown';
+import * as XLSX from 'xlsx';
 
 const ListPurchasesPage = () => {
   const navigate = useNavigate();
@@ -35,6 +36,22 @@ const ListPurchasesPage = () => {
       setPurchases(updatedPurchases);
       toast.success('SUCCESSFUL');
     }
+  };
+
+  const handleDownloadExcel = () => {
+    const headers = ['Date', 'Reference No.', 'Supplier', 'Purchase Status', 'Total Items', 'Grand Total'];
+    const rows = purchases.map((p) => [
+      p.purchaseDate ? new Date(p.purchaseDate).toLocaleDateString() : '',
+      p.referenceNo || '',
+      p.supplierName || '',
+      p.purchaseStatus || '',
+      p.totalItems ?? '',
+      p.grandTotal ?? 0
+    ]);
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Purchases');
+    XLSX.writeFile(wb, 'purchases.xlsx');
   };
 
   return (
@@ -77,14 +94,8 @@ const ListPurchasesPage = () => {
                 </select>
                 <span className="ms-2 me-3">entries</span>
 
-                <Button variant="outline-secondary" size="sm" className="me-2">
-                  <i className="mdi mdi-export me-1"></i> Export CSV
-                </Button>
-                <Button variant="outline-secondary" size="sm" className="me-2">
-                  <i className="mdi mdi-export me-1"></i> Export Excel
-                </Button>
-                <Button variant="outline-secondary" size="sm" className="me-2">
-                  <i className="mdi mdi-printer me-1"></i> Print
+                <Button variant="success" size="sm" onClick={handleDownloadExcel}>
+                  <i className="mdi mdi-download me-1"></i> Download Excel
                 </Button>
               </div>
 

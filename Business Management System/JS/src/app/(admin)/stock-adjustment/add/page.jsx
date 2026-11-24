@@ -2,6 +2,7 @@ import { Card, Col, Row, Button, Form, Table, Modal, Badge } from 'react-bootstr
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
+import { getLocations } from '@/helpers/settings';
 
 const AddStockAdjustmentPage = () => {
   const navigate = useNavigate();
@@ -228,13 +229,15 @@ const AddStockAdjustmentPage = () => {
                   <Col md={3}>
                     <Form.Group className="mb-3">
                       <Form.Label>Business Location:</Form.Label>
-                      <Form.Control
-                        type="text"
+                      <Form.Select
                         name="businessLocation"
                         value={formData.businessLocation}
                         onChange={handleInputChange}
-                        readOnly
-                      />
+                      >
+                        {getLocations().map((loc) => (
+                          <option key={loc.id} value={loc.name}>{loc.name}</option>
+                        ))}
+                      </Form.Select>
                     </Form.Group>
                   </Col>
                   <Col md={3}>
@@ -324,7 +327,7 @@ const AddStockAdjustmentPage = () => {
                         <th>Unit Cost</th>
                         <th>Total Cost</th>
                         <th>Reason <span className="text-danger">*</span></th>
-                        <th><i className="mdi mdi-delete"></i></th>
+                        <th>Remove</th>
                       </tr>
                     </thead>
                     <tbody>

@@ -62,7 +62,7 @@ const ProfitLossReportPage = () => {
       });
       
       filteredExpenses = expenses.filter(e => {
-        const date = new Date(e.expenseDate || e.createdAt);
+        const date = new Date(e.date || e.expenseDate || e.createdAt);
         return date >= start && date <= end;
       });
       
@@ -80,7 +80,7 @@ const ProfitLossReportPage = () => {
 
     const totalPurchases = filteredPurchases.reduce((sum, p) => sum + (p.grandTotal || 0), 0);
     const totalSales = filteredSales.reduce((sum, s) => sum + (s.grandTotal || 0), 0);
-    const totalExpenses = filteredExpenses.reduce((sum, e) => sum + (e.amount || 0), 0);
+    const totalExpenses = filteredExpenses.reduce((sum, e) => sum + (parseFloat(e.totalAmount ?? e.amount) || 0), 0);
     
     const totalStockAdjustment = filteredAdjustments
       .filter(a => a.type === 'subtraction')
@@ -95,9 +95,9 @@ const ProfitLossReportPage = () => {
     const sellReturn = 0;
     const purchaseReturn = 0;
 
-    const cogs = openingStockByPurchase + totalPurchases + totalExpenses + purchaseShipping - closingStockByPurchase;
+    const cogs = openingStockByPurchase + totalPurchases + purchaseShipping - closingStockByPurchase;
     const grossProfit = totalSales - cogs;
-    const netProfit = grossProfit - sellDiscount - totalStockAdjustment + purchaseDiscount + sellShipping;
+    const netProfit = grossProfit - totalExpenses - sellDiscount - totalStockAdjustment + purchaseDiscount + sellShipping;
 
     setReportData({
       openingStock: { byPurchase: openingStockByPurchase, bySale: openingStockBySale },
@@ -347,7 +347,7 @@ const ProfitLossReportPage = () => {
                       <strong>COGS: $ {reportData.cogs.toFixed(2)}</strong>
                     </div>
                     <div className="text-muted small mb-3">
-                      Cost of Goods Sold = Opening Stock + Purchases + Expenses + Purchase Shipping - Closing Stock
+                      Cost of Goods Sold = Opening Stock + Purchases + Purchase Shipping - Closing Stock
                     </div>
 
                     <div className="mb-2">
@@ -363,7 +363,7 @@ const ProfitLossReportPage = () => {
                       </strong>
                     </div>
                     <div className="text-muted small">
-                      Gross Profit - Sell Discount - Stock Adjustment + Purchase Discount + Sell Shipping
+                      Gross Profit - Expenses - Sell Discount - Stock Adjustment + Purchase Discount + Sell Shipping
                     </div>
                   </div>
                 </Col>

@@ -2,20 +2,34 @@ import { Card, Col, Row, Button, Form } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
-import { getTaxRates, getPaymentAccounts, getSettings } from '@/helpers/settings';
+import { getTaxRates, getPaymentAccounts, getSettings, getLocations } from '@/helpers/settings';
 
 const AddExpensePage = () => {
   const navigate = useNavigate();
   const [taxRates, setTaxRates] = useState([]);
   const [paymentAccounts, setPaymentAccounts] = useState([]);
+  const [customers, setCustomers] = useState([]);
+  const [suppliers, setSuppliers] = useState([]);
+  const locations = getLocations();
+  const defaultLocation = locations.find((l) => l.isDefault)?.name || locations[0]?.name || '';
+
+  const safeParse = (key) => {
+    try {
+      return JSON.parse(localStorage.getItem(key) || '[]');
+    } catch {
+      return [];
+    }
+  };
 
   useEffect(() => {
     setTaxRates(getTaxRates());
     setPaymentAccounts(getPaymentAccounts());
+    setCustomers(safeParse('bms_customers'));
+    setSuppliers(safeParse('bms_suppliers'));
   }, []);
 
   const [formData, setFormData] = useState({
-    businessLocation: '',
+    businessLocation: defaultLocation,
     expenseCategory: '',
     subCategory: '',
     referenceNo: '',
@@ -79,7 +93,7 @@ const AddExpensePage = () => {
     };
 
     // Get existing expenses
-    const existingExpenses = JSON.parse(localStorage.getItem('bms_expenses') || '[]');
+    const existingExpenses = safeParse('bms_expenses');
     
     // Add new expense
     existingExpenses.push(newExpense);
@@ -116,8 +130,10 @@ const AddExpensePage = () => {
                         onChange={handleInputChange}
                         required
                       >
-                        <option value="">POSPlus (BLOG1)</option>
-                        <option value="location1">Location 1</option>
+                        <option value="">Select Location</option>
+                        {locations.map((loc) => (
+                          <option key={loc.id} value={loc.name}>{loc.name}</option>
+                        ))}
                       </Form.Select>
                     </Form.Group>
                   </Col>
@@ -191,6 +207,7 @@ const AddExpensePage = () => {
                         <option value="">None</option>
                         <option value="user">User</option>
                         <option value="customer">Customer</option>
+                        <option value="supplier">Supplier</option>
                       </Form.Select>
                     </Form.Group>
                   </Col>
@@ -203,7 +220,20 @@ const AddExpensePage = () => {
                         onChange={handleInputChange}
                       >
                         <option value="">Please Select</option>
-                        <option value="contact1">Contact 1</option>
+                        <optgroup label="Customers">
+                          {customers.map((c) => (
+                            <option key={`cust-${c.id}`} value={`${c.name} (${c.mobile || 'no phone'})`}>
+                              {c.name}{c.mobile ? ` - ${c.mobile}` : ''}
+                            </option>
+                          ))}
+                        </optgroup>
+                        <optgroup label="Suppliers">
+                          {suppliers.map((s) => (
+                            <option key={`supp-${s.id}`} value={`${s.name} (${s.mobile || 'no phone'})`}>
+                              {s.name}{s.mobile ? ` - ${s.mobile}` : ''}
+                            </option>
+                          ))}
+                        </optgroup>
                       </Form.Select>
                     </Form.Group>
                   </Col>

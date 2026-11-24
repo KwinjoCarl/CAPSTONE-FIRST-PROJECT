@@ -1,6 +1,7 @@
 import { Card, Col, Row, Button, Table, Form, Dropdown, Modal, Badge, Alert } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import * as XLSX from 'xlsx';
 
 const ListProductsPage = () => {
   const navigate = useNavigate();
@@ -18,7 +19,58 @@ const ListProductsPage = () => {
       setProducts(storedProducts);
     };
 
-    loadProducts();
+    // One-time seed: merge the imported Excel products (public/imported-products.json)
+    // into bms_products so they appear alongside manually added products.
+    const seedImportedProducts = async () => {
+      if (localStorage.getItem('bms_products_seeded')) {
+        loadProducts();
+        return;
+      }
+      try {
+        const res = await fetch('/imported-products.json');
+        if (res.ok) {
+          const imported = await res.json();
+          const existing = JSON.parse(localStorage.getItem('bms_products') || '[]');
+          const existingSkus = new Set(existing.map((p) => p.sku));
+          const fresh = imported.filter((p) => !existingSkus.has(p.sku));
+          if (fresh.length) {
+            localStorage.setItem('bms_products', JSON.stringify([...existing, ...fresh]));
+          }
+        }
+      } catch (e) {
+        // seed file missing or fetch failed — continue with existing data
+      }
+      localStorage.setItem('bms_products_seeded', '1');
+      loadProducts();
+    };
+
+    // One-time stock update: set currentStock = 30 on all products (import batch).
+    const applyStockUpdate = () => {
+      if (localStorage.getItem('bms_stock_seeded_v1')) return;
+      const products = JSON.parse(localStorage.getItem('bms_products') || '[]');
+      if (products.length) {
+        products.forEach((p) => { p.currentStock = 30; });
+        localStorage.setItem('bms_products', JSON.stringify(products));
+        localStorage.setItem('bms_stock_seeded_v1', '1');
+        loadProducts();
+      }
+    };
+
+    // One-time SKU renumber: S11, S12, S13 ... on all products (import batch).
+    const applySkuUpdate = () => {
+      if (localStorage.getItem('bms_sku_seeded_v1')) return;
+      const products = JSON.parse(localStorage.getItem('bms_products') || '[]');
+      if (products.length) {
+        products.forEach((p, i) => { p.sku = 'S1' + (i + 1); });
+        localStorage.setItem('bms_products', JSON.stringify(products));
+        localStorage.setItem('bms_sku_seeded_v1', '1');
+        loadProducts();
+      }
+    };
+
+    seedImportedProducts();
+    applyStockUpdate();
+    applySkuUpdate();
 
     // Listen for storage changes
     window.addEventListener('storage', loadProducts);
@@ -86,6 +138,30 @@ const ListProductsPage = () => {
     setProductToDelete(null);
   };
 
+  const handleDownloadExcel = () => {
+    const headers = [
+      'Product', 'Unit Purchase Price', 'Selling Price', 'Current stock', 'Units',
+      'Alert Quantity', 'Product type', 'Category', 'Brand', 'Tax', 'SKU'
+    ];
+    const rows = products.map((p) => [
+      p.name || '',
+      p.purchasePrice ?? '',
+      p.sellingPrice ?? '',
+      p.currentStock ?? 0,
+      p.unit || '',
+      p.alertQuantity ?? '',
+      p.productType || '',
+      p.category || '',
+      p.brand || '',
+      p.tax || '',
+      p.sku || ''
+    ]);
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Products');
+    XLSX.writeFile(wb, 'products.xlsx');
+  };
+
   return (
     <>
       <Row>
@@ -95,7 +171,7 @@ const ListProductsPage = () => {
               <Button variant="primary" onClick={() => navigate('/products/add')}>
                 <i className="mdi mdi-plus me-1"></i> Add
               </Button>
-              <Button variant="success" className="ms-2">
+              <Button variant="success" className="ms-2" onClick={handleDownloadExcel}>
                 <i className="mdi mdi-download me-1"></i> Download Excel
               </Button>
             </div>
@@ -196,8 +272,6 @@ const ListProductsPage = () => {
                 <Table className="table-centered table-nowrap mb-0">
                   <thead className="table-light">
                     <tr>
-                      <th><input type="checkbox" /></th>
-                      <th>Product Image</th>
                       <th>Action</th>
                       <th>Product</th>
                       <th>Unit Purchase Price</th>
@@ -219,16 +293,6 @@ const ListProductsPage = () => {
                         
                         return (
                           <tr key={product.id} className={rowClass}>
-                            <td><input type="checkbox" /></td>
-                            <td>
-                              {product.image ? (
-                                <img src={product.image} alt={product.name} style={{ width: '40px', height: '40px', objectFit: 'cover' }} />
-                              ) : (
-                                <div style={{ width: '40px', height: '40px', backgroundColor: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                  <i className="mdi mdi-image"></i>
-                                </div>
-                              )}
-                            </td>
                             <td>
                               <Dropdown>
                                 <Dropdown.Toggle variant="primary" size="sm">
@@ -283,7 +347,7 @@ const ListProductsPage = () => {
                       })
                     ) : (
                       <tr>
-                        <td colSpan="12" className="text-center text-muted py-4">
+                        <td colSpan="10" className="text-center text-muted py-4">
                           {filterType === 'all' ? 'No products found' :
                            filterType === 'low-stock' ? 'No low stock items' :
                            'No out of stock items'}

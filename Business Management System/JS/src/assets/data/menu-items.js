@@ -59,11 +59,6 @@ export const MENU_ITEMS = [{
     label: 'Add Product',
     url: '/products/add',
     parentKey: 'products'
-  }, {
-    key: 'print-labels',
-    label: 'Print Labels',
-    url: '/products/print-labels',
-    parentKey: 'products'
   }]
 },
 // ====================Purchases===============
@@ -80,11 +75,6 @@ export const MENU_ITEMS = [{
     key: 'add-purchase',
     label: 'Add Purchase',
     url: '/purchases/add',
-    parentKey: 'purchases'
-  }, {
-    key: 'list-purchase-return',
-    label: 'List Purchase Return',
-    url: '/purchases/purchase-return',
     parentKey: 'purchases'
   }]
 },
@@ -225,11 +215,6 @@ export const MENU_ITEMS = [{
     key: 'invoice-settings',
     label: 'Invoice Settings',
     url: '/settings/invoice',
-    parentKey: 'settings'
-  }, {
-    key: 'barcode-settings',
-    label: 'Barcode Settings',
-    url: '/settings/barcode',
     parentKey: 'settings'
   }]
 }];

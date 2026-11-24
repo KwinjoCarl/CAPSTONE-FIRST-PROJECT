@@ -50,6 +50,7 @@
     "resolve": "^1.22.8",
     "sass": "^1.82.0",
     "simplebar-react": "^3.3.0",
+    "xlsx": "^0.18.5",
     "yup": "^1.5.0"
   },
   "devDependencies": {

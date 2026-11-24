@@ -9,7 +9,6 @@ export const ALL_PERMISSIONS = [
   'customers.view', 'customers.create', 'customers.update', 'customers.delete',
   'products.view', 'products.create', 'products.update', 'products.delete',
   'purchases.view', 'purchases.create', 'purchases.update', 'purchases.delete',
-  'purchase_return.view', 'purchase_return.create',
   'sales.view', 'sales.create', 'sales.update', 'sales.delete',
   'pos.access', 'quotations.view', 'quotations.create',
   'stock_adjustments.view', 'stock_adjustments.create', 'stock_adjustments.delete',
@@ -18,7 +17,7 @@ export const ALL_PERMISSIONS = [
   'reports.products', 'reports.purchases', 'reports.sales',
   'reports.product_stock', 'reports.stock_adjustment',
   'settings.business', 'settings.locations', 'settings.tax_rates',
-  'settings.payment_accounts', 'settings.invoice', 'settings.barcode'
+  'settings.payment_accounts', 'settings.invoice'
 ];
 
 // Grouped for the role create/edit checkbox matrix
@@ -80,9 +79,7 @@ export const PERMISSION_GROUPS = [
       { name: 'purchases.view', label: 'View purchases' },
       { name: 'purchases.create', label: 'Add purchase' },
       { name: 'purchases.update', label: 'Edit purchase' },
-      { name: 'purchases.delete', label: 'Delete purchase' },
-      { name: 'purchase_return.view', label: 'View purchase returns' },
-      { name: 'purchase_return.create', label: 'Add purchase return' }
+      { name: 'purchases.delete', label: 'Delete purchase' }
     ]
   },
   {
@@ -134,8 +131,7 @@ export const PERMISSION_GROUPS = [
       { name: 'settings.locations', label: 'Business locations' },
       { name: 'settings.tax_rates', label: 'Tax rates' },
       { name: 'settings.payment_accounts', label: 'Payment accounts' },
-      { name: 'settings.invoice', label: 'Invoice settings' },
-      { name: 'settings.barcode', label: 'Barcode settings' }
+      { name: 'settings.invoice', label: 'Invoice settings' }
     ]
   }
 ];
@@ -149,10 +145,8 @@ export const MENU_PERMISSIONS = {
   'customers': 'customers.view',
   'list-products': 'products.view',
   'add-product': 'products.create',
-  'print-labels': 'products.view',
   'list-purchases': 'purchases.view',
   'add-purchase': 'purchases.create',
-  'list-purchase-return': 'purchase_return.view',
   'all-sales': 'sales.view',
   'add-sale': 'sales.create',
   'pos': 'pos.access',
@@ -173,8 +167,7 @@ export const MENU_PERMISSIONS = {
   'business-locations': 'settings.locations',
   'tax-rates': 'settings.tax_rates',
   'payment-accounts': 'settings.payment_accounts',
-  'invoice-settings': 'settings.invoice',
-  'barcode-settings': 'settings.barcode'
+  'invoice-settings': 'settings.invoice'
 };
 
 // Ordered route patterns -> required permission (specific paths first)
@@ -203,8 +196,6 @@ export const ROUTE_PERMISSIONS = [
   // Purchases
   { match: /^\/purchases\/add/, permission: 'purchases.create' },
   { match: /^\/purchases\/edit/, permission: 'purchases.update' },
-  { match: /^\/purchases\/purchase-return\/add/, permission: 'purchase_return.create' },
-  { match: /^\/purchases\/purchase-return/, permission: 'purchase_return.view' },
   { match: /^\/purchases\/import/, permission: 'purchases.create' },
   { match: /^\/purchases/, permission: 'purchases.view' },
   // Sales
@@ -251,7 +242,6 @@ export const ROUTE_PERMISSIONS = [
   { match: /^\/settings\/tax-rates/, permission: 'settings.tax_rates' },
   { match: /^\/settings\/payment-accounts/, permission: 'settings.payment_accounts' },
   { match: /^\/settings\/invoice/, permission: 'settings.invoice' },
-  { match: /^\/settings\/barcode/, permission: 'settings.barcode' },
   { match: /^\/settings\/receipt-printers/, permission: 'settings.business' },
   { match: /^\/settings/, permission: 'settings.business' },
   // Home (loose default)

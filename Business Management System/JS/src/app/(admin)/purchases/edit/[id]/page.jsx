@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { markPurchaseInventoryApplied, updateInventoryForPurchase } from '@/utils/purchaseInventory';
+import { getLocations } from '@/helpers/settings';
 
 const EditPurchasePage = () => {
   const navigate = useNavigate();
@@ -309,8 +310,9 @@ const EditPurchasePage = () => {
                     <Form.Group className="mb-3">
                       <Form.Label>Business Location</Form.Label>
                       <Form.Select name="businessLocation" value={formData.businessLocation} onChange={handleInputChange}>
-                        <option value="Main Store">Main Store</option>
-                        <option value="Location 1">Location 1</option>
+                        {getLocations().map((loc) => (
+                          <option key={loc.id} value={loc.name}>{loc.name}</option>
+                        ))}
                       </Form.Select>
                     </Form.Group>
                   </Col>

@@ -336,7 +336,7 @@ const AddPurchasePage = () => {
                         <th>Profit Margin %</th>
                         <th>Selling Price</th>
                         <th>Lot Number</th>
-                        <th><i className="mdi mdi-delete"></i></th>
+                        <th>Remove</th>
                       </tr>
                     </thead>
                     <tbody>

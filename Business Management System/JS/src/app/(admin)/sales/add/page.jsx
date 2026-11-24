@@ -224,6 +224,8 @@ const AddSalePage = () => {
 
   const change = calculateChange();
 
+  const isDraftOrQuotation = formData.status === 'draft' || formData.status === 'quotation';
+
   const updateInventory = (items) => {
     // Get current products
     const products = JSON.parse(localStorage.getItem('bms_products') || '[]');
@@ -249,6 +251,11 @@ const AddSalePage = () => {
     if (saleItems.length === 0) {
       toast.error('Please add at least one product');
       return false;
+    }
+
+    // Drafts and quotations skip payment validation
+    if (isDraftOrQuotation) {
+      return true;
     }
 
     // Validate payment method specific requirements
@@ -318,9 +325,9 @@ const AddSalePage = () => {
       orderTaxRate: totals.taxRate,
       taxAmount: totals.taxAmount,
       sellNote: formData.sellNote,
-      paymentMethod: formData.paymentMethod,
-      amountReceived: formData.paymentMethod === 'cash' ? parseFloat(formData.amountReceived) : totals.grandTotal,
-      change: formData.paymentMethod === 'cash' ? change : 0,
+      paymentMethod: isDraftOrQuotation ? 'pending' : formData.paymentMethod,
+      amountReceived: !isDraftOrQuotation && formData.paymentMethod === 'cash' ? parseFloat(formData.amountReceived) : (isDraftOrQuotation ? 0 : totals.grandTotal),
+      change: !isDraftOrQuotation && formData.paymentMethod === 'cash' ? change : 0,
       mobileMoneyReference: formData.mobileMoneyReference,
       paymentNote: formData.paymentNote,
       totalItems: totals.totalItems,
@@ -340,8 +347,10 @@ const AddSalePage = () => {
     // Save to localStorage
     localStorage.setItem('bms_sales', JSON.stringify(existingSales));
     
-    // Update inventory levels
-    updateInventory(saleItems);
+    // Update inventory levels (final sales only — drafts/quotations don't affect stock)
+    if (!isDraftOrQuotation) {
+      updateInventory(saleItems);
+    }
     
     return newSale;
   };
@@ -351,7 +360,8 @@ const AddSalePage = () => {
     
     const sale = saveSale();
     if (sale) {
-      toast.success(`Sale completed! Transaction ID: ${sale.transactionId}`);
+      const docLabel = sale.status === 'quotation' ? 'Quotation' : sale.status === 'draft' ? 'Draft' : 'Sale';
+      toast.success(`${docLabel} saved! Transaction ID: ${sale.transactionId}`);
       navigate('/sales/all');
     }
   };
@@ -361,7 +371,8 @@ const AddSalePage = () => {
     
     const sale = saveSale();
     if (sale) {
-      toast.success(`Sale completed! Transaction ID: ${sale.transactionId}`);
+      const docLabel = sale.status === 'quotation' ? 'Quotation' : sale.status === 'draft' ? 'Draft' : 'Sale';
+      toast.success(`${docLabel} saved! Transaction ID: ${sale.transactionId}`);
       printInvoice(sale);
     }
   };
@@ -369,12 +380,14 @@ const AddSalePage = () => {
   const printInvoice = (sale) => {
     const printWindow = window.open('', '_blank');
     const settings = getSettings();
+    const docType = sale.status === 'quotation' ? 'Quotation' : sale.status === 'draft' ? 'Draft' : 'Sales Invoice';
+    const isPending = sale.status === 'draft' || sale.status === 'quotation';
 
     const invoiceHTML = `
       <!DOCTYPE html>
       <html>
       <head>
-        <title>Invoice - ${sale.invoiceNo}</title>
+        <title>${docType} - ${sale.invoiceNo}</title>
         <style>
           body {
             font-family: Arial, sans-serif;
@@ -466,9 +479,11 @@ const AddSalePage = () => {
       <body>
         <div class="invoice-header">
           <h1>${settings.businessName}</h1>
-          <p>Sales Invoice</p>
+          <p>${docType}</p>
+          ${settings.ownerName ? `<p>Owner: ${settings.ownerName}</p>` : ''}
           ${settings.address ? `<p>${settings.address}</p>` : ''}
           ${settings.phone ? `<p>Phone: ${settings.phone}</p>` : ''}
+          ${settings.email ? `<p>Email: ${settings.email}</p>` : ''}
           ${settings.taxNumber ? `<p>Tax No: ${settings.taxNumber}</p>` : ''}
         </div>
 
@@ -541,6 +556,9 @@ const AddSalePage = () => {
 
         <div class="payment-info">
           <h3>Payment Information</h3>
+          ${isPending ? `
+            <p><strong>Payment Status:</strong> Pending — payment will be collected when this ${docType.toLowerCase()} is finalized.</p>
+          ` : `
           <p><strong>Payment Method:</strong> ${sale.paymentMethod.toUpperCase()}</p>
           ${sale.paymentMethod === 'cash' ? `
             <p><strong>Amount Received:</strong> $${sale.amountReceived.toFixed(2)}</p>
@@ -552,6 +570,7 @@ const AddSalePage = () => {
           ${sale.paymentMethod === 'credit' ? `
             <p><strong>Payment Status:</strong> Credit Sale</p>
           ` : ''}
+          `}
         </div>
 
         ${sale.sellNote ? `
@@ -564,7 +583,7 @@ const AddSalePage = () => {
         <div class="footer">
           <p>${settings.invoiceFooterText || 'Thank you for your business!'}</p>
           <p>Transaction completed on ${new Date().toLocaleString()}</p>
-          <p><strong>Inventory Updated:</strong> Stock levels have been automatically adjusted</p>
+          ${isPending ? '' : '<p><strong>Inventory Updated:</strong> Stock levels have been automatically adjusted</p>'}
         </div>
 
         <div class="no-print" style="text-align: center; margin-top: 20px;">
@@ -713,7 +732,7 @@ const AddSalePage = () => {
                         <th>Discount %</th>
                         <th>Unit Price After Discount</th>
                         <th>Line Total</th>
-                        <th><i className="mdi mdi-delete"></i></th>
+                        <th>Remove</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -875,6 +894,12 @@ const AddSalePage = () => {
             <Card>
               <Card.Body>
                 <h5 className="mb-3">Step 4: Payment Processing</h5>
+                {isDraftOrQuotation ? (
+                  <Alert variant="secondary" className="mb-0">
+                    <i className="mdi mdi-information me-2"></i>
+                    Payment processing is not required for Draft or Quotation sales. It will be completed when the sale is finalized.
+                  </Alert>
+                ) : (
                 <Row>
                   <Col md={4}>
                     <Form.Group className="mb-3">
@@ -954,6 +979,7 @@ const AddSalePage = () => {
                     </Form.Group>
                   </Col>
                 </Row>
+                )}
               </Card.Body>
             </Card>
           </Col>
@@ -967,7 +993,7 @@ const AddSalePage = () => {
                 <Row>
                   <Col md={6}>
                     <p><strong>Total Items:</strong> {totals.totalItems}</p>
-                    <p><strong>Payment Method:</strong> {formData.paymentMethod.toUpperCase()}</p>
+                    <p><strong>Payment Method:</strong> {isDraftOrQuotation ? 'N/A' : formData.paymentMethod.toUpperCase()}</p>
                     {formData.customer && (
                       <p><strong>Customer:</strong> {customers.find(c => c.id === formData.customer)?.name || 'Walk-In'}</p>
                     )}
@@ -977,7 +1003,7 @@ const AddSalePage = () => {
                     <p><strong>Discount:</strong> -${totals.discount.toFixed(2)}</p>
                     <p><strong>Order Tax:</strong> +${totals.taxAmount.toFixed(2)}</p>
                     <h4 className="text-success"><strong>Grand Total:</strong> ${totals.grandTotal.toFixed(2)}</h4>
-                    {formData.paymentMethod === 'cash' && formData.amountReceived && (
+                    {!isDraftOrQuotation && formData.paymentMethod === 'cash' && formData.amountReceived && (
                       <p className="text-muted">Change: ${change.toFixed(2)}</p>
                     )}
                   </Col>

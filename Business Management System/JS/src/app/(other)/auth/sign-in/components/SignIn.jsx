@@ -56,9 +56,9 @@ const SignIn = () => {
                 </CardBody>
               </Card>
               <p className="text-center mt-4 text-white text-opacity-50">
-                Don&apos;t have an account?
+                Don&apos;t have an account?&nbsp;
                 <Link to="/auth/sign-up" className="text-decoration-none text-white fw-bold">
-                  Sign Up
+                  Contact System Administrator
                 </Link>
               </p>
             </Col>
